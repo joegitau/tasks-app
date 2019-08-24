@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
+    unique: true,
     validate(v) {
       if (!validator.isEmail(v)) {
         throw new Error("Email is invalid");
@@ -39,6 +40,19 @@ const userSchema = new mongoose.Schema({
     }
   }
 });
+
+// custom mongoose statics middlware
+userSchema.statics.findByCredentials = async function(email, password) {
+  // verify email
+  const user = await User.findOne({ email });
+  if (!user) return res.status(400).send("Email or Password is invalid");
+
+  // verify password
+  const isPassword = await bcrypt.compare(password, user.password);
+  if (!isPassword) return res.status(400).send("Email or Password is invalid");
+
+  return user;
+};
 
 // hash password middleware
 userSchema.pre("save", async function(next) {

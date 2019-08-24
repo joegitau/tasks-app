@@ -4,21 +4,13 @@ const User = require("../models/User");
 
 const route = express.Router();
 
-route.get("/", async (req, res) => {
+route.post("/login", async (req, res) => {
   try {
-    const users = await User.find().sort("-name");
-    res.send(users);
-  } catch (error) {
-    res.status(400).send(error);
-  }
-});
-
-route.get("/:id", async (req, res) => {
-  try {
-    const user = await User.findById({ _id: req.params.id });
-    res.send(user);
-  } catch (error) {
-    res.status(400).send(error);
+    const { email, password } = req.body;
+    const user = await User.findByCredentials(email, password);
+    res.status(200).send(user);
+  } catch (err) {
+    res.status(400).send();
   }
 });
 
@@ -71,6 +63,24 @@ route.put("/:id", async (req, res) => {
 route.delete("/:id", async (req, res) => {
   try {
     const user = await User.findByIdAndRemove({ _id: req.params.id });
+    res.send(user);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+route.get("/", async (req, res) => {
+  try {
+    const users = await User.find().sort("-name");
+    res.send(users);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+route.get("/:id", async (req, res) => {
+  try {
+    const user = await User.findById({ _id: req.params.id });
     res.send(user);
   } catch (error) {
     res.status(400).send(error);
