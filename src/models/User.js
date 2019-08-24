@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const mongoose = require("../db/mongoose");
 
@@ -38,7 +39,15 @@ const userSchema = new mongoose.Schema({
         throw new Error("Please try using another password");
       }
     }
-  }
+  },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true
+      }
+    }
+  ]
 });
 
 // custom mongoose statics middlware
@@ -62,6 +71,18 @@ userSchema.pre("save", async function(next) {
   }
   next();
 });
+
+// generate web token
+userSchema.methods.generateAuthToken = async function() {
+  const token = await jwt.sign({ _id: this._id }, "jwtPrivateKey", {
+    expiresIn: "30 days"
+  });
+
+  this.tokens = this.tokens.concat({ token });
+  this.save();
+
+  return token;
+};
 
 // user model
 const User = mongoose.model("User", userSchema);

@@ -1,8 +1,27 @@
-const bcrypt = require("bcrypt");
+const _ = require("lodash");
+const jwt = require("jsonwebtoken");
 const express = require("express");
 const User = require("../models/User");
 
 const route = express.Router();
+
+route.post("/", async (req, res) => {
+  try {
+    const { name, age, email, password } = req.body;
+    let user = new User({ name, age, email, password });
+    await user.save();
+
+    // generate webtoken
+    const token = await user.generateAuthToken();
+
+    res
+      .header("x-auth-token", token)
+      .status(201)
+      .send(_.pick(user, ["name", "age", "email", "tokens"]));
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
 
 route.post("/login", async (req, res) => {
   try {
@@ -11,24 +30,6 @@ route.post("/login", async (req, res) => {
     res.status(200).send(user);
   } catch (err) {
     res.status(400).send();
-  }
-});
-
-route.post("/", async (req, res) => {
-  try {
-    const { name, age, email, password } = req.body;
-    let user = new User({ name, age, email, password });
-
-    // hash password
-    // const salt = await bcrypt.genSalt(10);
-    // const hashedPassword = await bcrypt.hash(user.password, salt);
-
-    // user.password = hashedPassword;
-    await user.save();
-
-    res.status(201).send(user);
-  } catch (error) {
-    res.status(400).send(error);
   }
 });
 
