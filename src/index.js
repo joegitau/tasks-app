@@ -7,6 +7,11 @@ require("./db/mongoose");
 
 const app = express();
 
+// under maintenance middleware
+// app.use((req, res) => {
+//   res.status(503).send("Site under maintenance");
+// });
+
 // middleware
 app.use(express.json());
 app.use(express.urlencoded());

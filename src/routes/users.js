@@ -2,9 +2,11 @@ const _ = require("lodash");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const User = require("../models/User");
+const auth = require("../middleware/auth");
 
 const route = express.Router();
 
+// signup a user
 route.post("/", async (req, res) => {
   try {
     const { name, age, email, password } = req.body;
@@ -14,10 +16,7 @@ route.post("/", async (req, res) => {
     // generate webtoken
     const token = await user.generateAuthToken();
 
-    res
-      .header("x-auth-token", token)
-      .status(201)
-      .send(_.pick(user, ["name", "age", "email", "tokens"]));
+    res.status(201).send(_.pick(user, ["name", "age", "email", "tokens"]));
   } catch (error) {
     res.status(400).send(error);
   }
@@ -40,7 +39,7 @@ route.post("/login", async (req, res) => {
   }
 });
 
-route.put("/:id", async (req, res) => {
+route.put("/:id", auth, async (req, res) => {
   const fields = Object.keys(req.body);
   const allowedFields = ["name", "age", "email", "password"];
   const isValidOperation = fields.every(field => allowedFields.includes(field));
@@ -68,30 +67,30 @@ route.put("/:id", async (req, res) => {
   }
 });
 
-route.delete("/:id", async (req, res) => {
+route.delete("/:id", auth, async (req, res) => {
   try {
     const user = await User.findByIdAndRemove({ _id: req.params.id });
     res.send(user);
-  } catch (error) {
-    res.status(400).send(error);
+  } catch (err) {
+    res.status(400).send("User was not Deleted");
   }
 });
 
-route.get("/", async (req, res) => {
+// user profile
+route.get("/me", auth, async (req, res) => {
   try {
-    const users = await User.find().sort("-name");
-    res.send(users);
-  } catch (error) {
-    res.status(400).send(error);
+    res.status(200).send(user);
+  } catch (err) {
+    res.status(400).send("User not Found");
   }
 });
 
-route.get("/:id", async (req, res) => {
+route.get("/:id", auth, async (req, res) => {
   try {
     const user = await User.findById({ _id: req.params.id });
     res.send(user);
-  } catch (error) {
-    res.status(400).send(error);
+  } catch (err) {
+    res.status(400).send("User with given ID not found");
   }
 });
 

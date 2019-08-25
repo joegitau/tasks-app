@@ -1,5 +1,6 @@
 const express = require("express");
 const Task = require("../models/Task");
+const auth = require("../middleware/auth");
 
 const route = express.Router();
 
@@ -15,7 +16,7 @@ route.get("/:id", async (req, res) => {
   res.status(200).send(task);
 });
 
-route.post("/", async (req, res) => {
+route.post("/", auth, async (req, res) => {
   try {
     const { description, isComplete } = req.body;
     let task = new Task({ description, isComplete });
@@ -26,7 +27,7 @@ route.post("/", async (req, res) => {
   }
 });
 
-route.put("/:id", async (req, res) => {
+route.put("/:id", auth, async (req, res) => {
   const fields = Object.keys(req.body); // map the req.body object into an array of strings
   const allowedFields = ["description", "isComplete"];
   const isValidOperation = fields.every(field => allowedFields.includes(field));
@@ -54,7 +55,7 @@ route.put("/:id", async (req, res) => {
   }
 });
 
-route.delete("/:id", async (req, res) => {
+route.delete("/:id", auth, async (req, res) => {
   try {
     const task = await Task.findByIdAndRemove({ _id: req.params.id });
     if (!task)
