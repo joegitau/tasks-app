@@ -21,7 +21,7 @@ route.post("/", auth, async (req, res) => {
     const { description, isComplete } = req.body;
     let task = new Task({ description, isComplete });
     task = await task.save();
-    res.status(200).send(task);
+    res.status(201).send(task);
   } catch (error) {
     res.status(400).send({ error: "Could not Create Task" });
   }

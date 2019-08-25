@@ -1,5 +1,4 @@
 const _ = require("lodash");
-const jwt = require("jsonwebtoken");
 const express = require("express");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
@@ -8,20 +7,22 @@ const route = express.Router();
 
 // signup a user
 route.post("/", async (req, res) => {
+  const { name, age, email, password } = req.body;
+  const user = new User({ name, age, email, password });
   try {
-    const { name, age, email, password } = req.body;
-    let user = new User({ name, age, email, password });
     await user.save();
 
     // generate webtoken
     const token = await user.generateAuthToken();
 
-    res.status(201).send(_.pick(user, ["name", "age", "email", "tokens"]));
-  } catch (error) {
-    res.status(400).send(error);
+    // res.status(201).send(_.pick(user, ["name", "age", "email", "tokens"]));
+    res.status(201).send({ user, token });
+  } catch (err) {
+    res.status(400).send(err);
   }
 });
 
+// login user
 route.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -30,15 +31,13 @@ route.post("/login", async (req, res) => {
     // generate webtoken
     const token = user.generateAuthToken();
 
-    res
-      .header("x-auth-token", token)
-      .status(200)
-      .send(user);
+    res.status(200).send({ user, token });
   } catch (err) {
-    res.status(400).send();
+    res.status(400).send("Email or Password is invalid");
   }
 });
 
+// edit a user
 route.put("/:id", auth, async (req, res) => {
   const fields = Object.keys(req.body);
   const allowedFields = ["name", "age", "email", "password"];
@@ -67,6 +66,7 @@ route.put("/:id", auth, async (req, res) => {
   }
 });
 
+// delete user
 route.delete("/:id", auth, async (req, res) => {
   try {
     const user = await User.findByIdAndRemove({ _id: req.params.id });
@@ -76,13 +76,9 @@ route.delete("/:id", auth, async (req, res) => {
   }
 });
 
-// user profile
+// current user profile
 route.get("/me", auth, async (req, res) => {
-  try {
-    res.status(200).send(user);
-  } catch (err) {
-    res.status(400).send("User not Found");
-  }
+  res.status(200).send(req.user);
 });
 
 route.get("/:id", auth, async (req, res) => {

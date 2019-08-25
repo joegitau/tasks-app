@@ -16,7 +16,8 @@ async function auth(req, res, next) {
     });
     if (!user) throw new Error();
 
-    // assign the user to a new req object with name user
+    // assign the user to a new req object with name user + token to req.token
+    req.token = token;
     req.user = user;
 
     next();

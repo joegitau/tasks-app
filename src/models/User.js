@@ -50,6 +50,17 @@ const userSchema = new mongoose.Schema({
   ]
 });
 
+// generate web token
+userSchema.methods.generateAuthToken = async function() {
+  const token = jwt.sign({ _id: this._id.toString() }, "jwtPrivateKey");
+
+  // create new array that will include an already created token object + the new tokn object
+  this.tokens = this.tokens.concat({ token });
+  await this.save();
+
+  return token;
+};
+
 // custom mongoose statics middlware
 userSchema.statics.findByCredentials = async function(email, password) {
   // verify email
@@ -71,19 +82,6 @@ userSchema.pre("save", async function(next) {
   }
   next();
 });
-
-// generate web token
-userSchema.methods.generateAuthToken = async function() {
-  const token = await jwt.sign({ _id: this._id }, "jwtPrivateKey", {
-    expiresIn: "30 days"
-  });
-
-  // create new array that will include an already created token object + the new tokn object
-  this.tokens = this.tokens.concat({ token });
-  this.save();
-
-  return token;
-};
 
 // user model
 const User = mongoose.model("User", userSchema);
