@@ -78,6 +78,7 @@ userSchema.methods.generateAuthToken = async function() {
     expiresIn: "30 days"
   });
 
+  // create new array that will include an already created token object + the new tokn object
   this.tokens = this.tokens.concat({ token });
   this.save();
 

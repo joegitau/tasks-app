@@ -27,7 +27,14 @@ route.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findByCredentials(email, password);
-    res.status(200).send(user);
+
+    // generate webtoken
+    const token = user.generateAuthToken();
+
+    res
+      .header("x-auth-token", token)
+      .status(200)
+      .send(user);
   } catch (err) {
     res.status(400).send();
   }
