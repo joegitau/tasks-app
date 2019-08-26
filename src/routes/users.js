@@ -3,13 +3,16 @@ const express = require("express");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
 
-const route = express.Router();
+const router = express.Router();
 
 // signup a user
-route.post("/", async (req, res) => {
-  const { name, age, email, password } = req.body;
-  const user = new User({ name, age, email, password });
+router.post("/", async (req, res) => {
   try {
+    // check if user exists
+    let user = await User.findOne({ email: req.body.email });
+    if (user) return res.status(400).send("Email already registered");
+
+    user = new User(req.body);
     await user.save();
 
     // generate webtoken
@@ -18,12 +21,12 @@ route.post("/", async (req, res) => {
     // res.status(201).send(_.pick(user, ["name", "age", "email", "tokens"]));
     res.status(201).send({ user, token });
   } catch (err) {
-    res.status(400).send(err);
+    res.status(400).send("Could not create New user");
   }
 });
 
 // login user
-route.post("/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findByCredentials(email, password);
@@ -37,8 +40,32 @@ route.post("/login", async (req, res) => {
   }
 });
 
+// logout user
+router.post("/logout", auth, async (req, res) => {
+  try {
+    // select the specific token used to login
+    req.user.tokens = req.user.tokens.filter(t => t.token !== req.token);
+    await req.user.save();
+    res.status(200).send("User successfully logged out!");
+  } catch (err) {
+    res.status(500).send("Could not complete process");
+  }
+});
+
+// delete all login tokens
+router.post("/logoutAll", auth, async (req, res) => {
+  try {
+    // empty the tokens array
+    req.user.tokens = [];
+    await req.user.save();
+    res.send("Logged out from all accounts");
+  } catch (err) {
+    res.status(500).send("Could not complete process");
+  }
+});
+
 // edit a user
-route.put("/:id", auth, async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   const fields = Object.keys(req.body);
   const allowedFields = ["name", "age", "email", "password"];
   const isValidOperation = fields.every(field => allowedFields.includes(field));
@@ -67,7 +94,7 @@ route.put("/:id", auth, async (req, res) => {
 });
 
 // delete user
-route.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
     const user = await User.findByIdAndRemove({ _id: req.params.id });
     res.send(user);
@@ -77,11 +104,11 @@ route.delete("/:id", auth, async (req, res) => {
 });
 
 // current user profile
-route.get("/me", auth, async (req, res) => {
+router.get("/me", auth, async (req, res) => {
   res.status(200).send(req.user);
 });
 
-route.get("/:id", auth, async (req, res) => {
+router.get("/:id", auth, async (req, res) => {
   try {
     const user = await User.findById({ _id: req.params.id });
     res.send(user);
@@ -90,4 +117,4 @@ route.get("/:id", auth, async (req, res) => {
   }
 });
 
-module.exports = route;
+module.exports = router;
