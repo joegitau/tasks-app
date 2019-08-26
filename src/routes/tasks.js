@@ -4,15 +4,19 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+// find all tasks from particular user
+router.get("/", auth, async (req, res) => {
   try {
-    const tasks = await Task.find().populate("user");
-    res.status(200).send(tasks);
+    // const tasks = await Task.find({ creator: req.user._id}) -> alternative
+
+    await req.user.populate("tasks").execPopulate();
+    res.status(200).send(req.user.tasks);
   } catch (err) {
     res.status(400).send("Could not fetch Tasks", err);
   }
 });
 
+// find single user task
 router.get("/:id", auth, async (req, res) => {
   try {
     const task = await Task.findOne({
