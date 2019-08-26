@@ -97,7 +97,7 @@ router.put("/:id", auth, async (req, res) => {
 router.delete("/me", auth, async (req, res) => {
   try {
     req.user.remove();
-    res.send({ user, message: "User successfully deleted!" });
+    res.status(200).end(req.user);
   } catch (err) {
     res.status(400).send("User was not Deleted");
   }
