@@ -61,6 +61,13 @@ userSchema.methods.generateAuthToken = async function() {
   return token;
 };
 
+// Virtual populate API - provides relationship to the tasks
+userSchema.virtual("tasks", {
+  ref: "Task",
+  localField: "_id",
+  foreignField: "creator"
+});
+
 // hide user objects using mongoose toObject()
 userSchema.methods.toJSON = function() {
   const userObject = this.toObject();

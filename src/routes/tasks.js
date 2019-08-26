@@ -5,25 +5,34 @@ const auth = require("../middleware/auth");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const tasks = await Task.find().select("-name");
-  res.status(200).send(tasks);
+  try {
+    const tasks = await Task.find().populate("user");
+    res.status(200).send(tasks);
+  } catch (err) {
+    res.status(400).send("Could not fetch Tasks", err);
+  }
 });
 
-router.get("/:id", async (req, res) => {
-  const task = await Task.findById({ _id: req.params.id });
-  if (!task)
-    return res.status(404).send({ error: "Cannot find Task with given ID" });
-  res.status(200).send(task);
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      creator: req.user._id
+    });
+    if (!task) return res.status(404).send({ error: "Cannot find Task" });
+    res.status(200).send(task);
+  } catch (err) {
+    res.status(500).send("Something went wrong!");
+  }
 });
 
 router.post("/", auth, async (req, res) => {
   try {
-    const { description, isComplete } = req.body;
-    const task = new Task({ description, isComplete });
+    const task = new Task({ ...req.body, creator: req.user._id });
     await task.save();
     res.status(201).send(task);
   } catch (error) {
-    res.status(400).send({ error: "Could not Create Task" });
+    res.status(400).send("Could not Create Task");
   }
 });
 
