@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
     // generate webtoken
     const token = await user.generateAuthToken();
 
-    // res.status(201).send(_.pick(user, ["name", "age", "email", "tokens"]));
+    // res.status(201).send({ user: _.pick(user, ["email", "tokens"]), token });
     res.status(201).send({ user, token });
   } catch (err) {
     res.status(400).send("Could not create New user");
@@ -34,6 +34,7 @@ router.post("/login", async (req, res) => {
     // generate webtoken
     const token = user.generateAuthToken();
 
+    // res.status(200).send({ user: _.pick(user, ["email", "tokens"]), token });
     res.status(200).send({ user, token });
   } catch (err) {
     res.status(400).send("Email or Password is invalid");
