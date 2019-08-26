@@ -65,8 +65,8 @@ router.post("/logoutAll", auth, async (req, res) => {
   }
 });
 
-// edit a user
-router.put("/:id", auth, async (req, res) => {
+// edit current user
+router.put("/me", auth, async (req, res) => {
   const fields = Object.keys(req.body);
   const allowedFields = ["name", "age", "email", "password"];
   const isValidOperation = fields.every(field => allowedFields.includes(field));
@@ -75,22 +75,12 @@ router.put("/:id", auth, async (req, res) => {
     return res.status(400).send({ error: "Invalid Updates" });
 
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(400).send("User not Found");
+    fields.forEach(field => (req.user[field] = req.body[field]));
+    await req.user.save();
 
-    fields.forEach(field => (user[field] = req.body[field]));
-    await user.save();
-
-    // const { name, age, email, password } = req.body;
-    // const user = await User.findByIdAndUpdate(
-    //   { _id: req.params.id },
-    //   { $set: { name, age, email, password } },
-    //   { new: true, runValidators: true }
-    // );
-
-    res.status(201).send(user);
+    res.status(201).send(req.user);
   } catch (error) {
-    res.status(400).send(error, "Could not update User");
+    res.status(400).send(error, "Could not update User profile");
   }
 });
 
