@@ -93,11 +93,11 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-// delete user
-router.delete("/:id", auth, async (req, res) => {
+// delete current profile
+router.delete("/me", auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndRemove({ _id: req.params.id });
-    res.send(user);
+    req.user.remove();
+    res.send({ user, message: "User successfully deleted!" });
   } catch (err) {
     res.status(400).send("User was not Deleted");
   }

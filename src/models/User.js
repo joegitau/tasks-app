@@ -61,6 +61,16 @@ userSchema.methods.generateAuthToken = async function() {
   return token;
 };
 
+// hide user objects using mongoose toObject()
+userSchema.methods.toJSON = function() {
+  const userObject = this.toObject();
+
+  delete userObject.password;
+  delete userObject.tokens;
+
+  return userObject;
+};
+
 // custom mongoose statics middlware
 userSchema.statics.findByCredentials = async function(email, password) {
   // verify email
